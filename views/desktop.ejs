@@ -1,0 +1,85 @@
+<html lang="en">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1,IE=EmulateIE11" />
+<head>
+    <title>
+        BPCE Timeline
+    </title>
+</head>
+
+<body>
+    <form id="timelineForm" target="timelineIFrame" method="POST">
+        <input type="hidden"  id="persons" name="persons" value="<%= persons %>">
+        <input type="hidden"  id="site" name="site" value="<%= site %>">
+        <input type="hidden"  id="role" name="role" value="<%= role %>"> 
+        <input type="hidden"  id="chart" name="chart" value="<%= chart %>">            
+        <input type="hidden"  id="frameh" name="frameh" value="<%= frameh %>">            
+        <input type="hidden"  id="combo" name="combo" value="<%= combo %>">        
+    </form> 
+
+    <iframe id="timelineIFrame" 
+            name="timelineIFrame"            
+            title="Inline Timeline" 
+            width="100%" height="100%" 
+            style="border: none;">
+    </iframe>
+</body>
+
+<script>
+    var TIMELINE_INSTANCE_URL = '<%= timelineInstanceUrl %>';
+    var AGENT_INSTANCE_URL = '<%= agentInstanceUrl %>';
+
+    window.addEventListener("message", function (e) {
+        if (e.data && e.data.origin && e.data.origin === TIMELINE_INSTANCE_URL) {
+            function setCookie(cname, cvalue, exdays) {
+                var d = new Date();
+                d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
+                var expires = "expires=" + d.toUTCString();
+                document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/;";
+            }
+
+            setCookie('accesstoken', e.data.sid, 1);
+            window.loadIFrame();
+        }
+    }, false);
+
+    window.addEventListener("load", function (e) {
+        window.loadIFrame();
+    });
+
+    window.loadIFrame = function () {
+        var xhr = new XMLHttpRequest();
+        xhr.onload = function () {
+            if (xhr.status == 200) {
+                var timelineUrl = JSON.parse(xhr.response).TimelineUrl;
+                document.getElementById('timelineForm').action = timelineUrl;
+                document.getElementById('timelineForm').submit();
+            }
+
+            if (xhr.status == 401) {
+                var redirectUrl = JSON.parse(xhr.response).AuthUrl;
+                redirectUrl += '?retUrl='+AGENT_INSTANCE_URL+'/redirect'
+                window.open(redirectUrl);
+            }
+        };         
+
+        xhr.open('GET', TIMELINE_INSTANCE_URL + '/timelineUrl');
+        
+        var accesstoken = null;
+        var cookies = document.cookie.split("; ") || [];
+        for(var i=0;i<cookies.length; i++){
+            var v = cookies[i];
+            if(v.lastIndexOf("accesstoken", 0) === 0){
+                accesstoken = v;
+            }
+        }
+
+        if (accesstoken) {
+            accesstoken = accesstoken.split("=")[1];
+            xhr.setRequestHeader('Authorization', 'Bearer '+ accesstoken);            
+        }
+
+        xhr.send();
+    }    
+</script>
+
+</html>

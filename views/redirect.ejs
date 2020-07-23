@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1,IE=EmulateIE11" />
+<head>
+  <title>
+    BPCE Timeline
+  </title>
+</head>
+
+<body>
+    <p>Redirecting...</p>
+</body>
+
+<script>        
+    var TIMELINE_INSTANCE_URL = '<%= timelineInstanceUrl %>';
+    var sid = window.location.search.split('sid=')[1];
+    var parentWindow = window.opener || window.parent;
+
+    parentWindow.postMessage({
+      origin: TIMELINE_INSTANCE_URL,
+      sid: sid
+    }, '*');
+
+    window.setTimeout(window.close(),200);
+</script>
+
+</html>
